@@ -13,7 +13,7 @@ extern "C" {
 #define NTP_SERVER2            "nl.pool.ntp.org"    // [NtpServer2] Select second NTP server by name or IP address (5.39.184.5)
 #define NTP_SERVER3            "0.nl.pool.ntp.org"  // [NtpServer3] Select third NTP server by name or IP address (93.94.224.67)
 
-char ntp_servers[3][33] = {};
+char ntp_servers_my[3][33] = {};
 
 #define RTC_MEM_VALID 0xA55A
 
@@ -265,14 +265,14 @@ void RtcSecond() {
 Ticker TickerRtc;
 
 void RtcInit() {
-    strlcpy(ntp_servers[0], NTP_SERVER1, sizeof(ntp_servers[0]));
-    strlcpy(ntp_servers[1], NTP_SERVER2, sizeof(ntp_servers[1]));
-    strlcpy(ntp_servers[2], NTP_SERVER3, sizeof(ntp_servers[2]));
-    sntp_setservername(0, ntp_servers[0]);
-    sntp_setservername(1, ntp_servers[1]);
-    sntp_setservername(2, ntp_servers[3]);
-//    for (int i=0; i < sizeof(ntp_servers)/sizeof(ntp_servers[0]); i++) {
-//	ping_ntp_sever(ntp_servers[i]);
+    strlcpy(ntp_servers_my[0], NTP_SERVER1, sizeof(ntp_servers_my[0]));
+    strlcpy(ntp_servers_my[1], NTP_SERVER2, sizeof(ntp_servers_my[1]));
+    strlcpy(ntp_servers_my[2], NTP_SERVER3, sizeof(ntp_servers_my[2]));
+    sntp_setservername(0, ntp_servers_my[0]);
+    sntp_setservername(1, ntp_servers_my[1]);
+    sntp_setservername(2, ntp_servers_my[3]);
+//    for (int i=0; i < sizeof(ntp_servers_my)/sizeof(ntp_servers_my[0]); i++) {
+//	ping_ntp_sever(ntp_servers_my[i]);
 //    }
     sntp_stop();
     sntp_set_timezone(0);      // UTC time
