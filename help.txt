@@ -1,0 +1,3 @@
+
+pio run -e roller-d1 -t upload && pio device monitor
+curl -H "Content-type: application/x-www-form-urlencoded" -d 'firmware=http://192.168.0.106/firmware-roller-nodemcuv2-0.0.1.bin' http://wemos-2341.local/esp

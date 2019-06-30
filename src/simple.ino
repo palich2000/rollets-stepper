@@ -12,6 +12,8 @@
 #include "settings.h"
 #include <CheapStepper.h>
 #include "FS.h"
+#include <Ticker.h>
+Ticker ticker;
 
 CheapStepper *BlindStepper = NULL;
 
@@ -114,7 +116,7 @@ void setup_web_server() {
         String firmware = web_server.arg("firmware");
         web_server.close();
         SYSLOG(LOG_INFO, "Begin update firmwate: %s", firmware.c_str());
-        HTTPUpdateResult ret = ESPhttpUpdate.update(firmware, "1.0.0");
+        HTTPUpdateResult ret = ESPhttpUpdate.update(EspClient, firmware, "1.0.0");
         web_server.begin();
         switch(ret) {
         case HTTP_UPDATE_FAILED:
@@ -142,10 +144,24 @@ void setup_web_server() {
 
 int spiffsActive = 0;
 
+void configModeCallback (WiFiManager *myWiFiManager) {
+  Serial.println("Entered config mode");
+  Serial.println(WiFi.softAPIP());
+  Serial.println(myWiFiManager->getConfigPortalSSID());
+  ticker.attach(0.2, tick);
+}
+
+void tick()
+{
+  int state = digitalRead(LED_BUILTIN);
+  digitalWrite(LED_BUILTIN, !state);
+}
+
 void
 setup() {
     pinMode(LED_BUILTIN, OUTPUT);
-    digitalWrite(LED_BUILTIN, LOW);
+    ticker.attach(0.6, tick);
+    // digitalWrite(LED_BUILTIN, LOW);
 
     Serial.begin(115200);
     Serial.println();
@@ -159,7 +175,8 @@ setup() {
 
     WiFi.hostname(my_hostname);
     WiFi.begin(ssid, password);
-    if (!wifiManager.autoConnect(ssid, password)) {
+    wifiManager.setAPCallback(configModeCallback);
+    if (!wifiManager.autoConnect(/*ssid, password*/)) {
         Serial.println("failed to connect, we should reset as see if it connects");
         delay(3000);
         ESP.reset();
@@ -199,7 +216,9 @@ setup() {
     BlindStepper->setRpm(12);
     file_load_settings();
     SYSLOG(LOG_INFO, "=======End setup======");
-    digitalWrite(LED_BUILTIN, HIGH);
+
+    ticker.detach();
+    digitalWrite(LED_BUILTIN, HIGH); //led off
 }
 
 void
@@ -462,7 +481,7 @@ volatile unsigned long upButtonPressed = 0;
 volatile unsigned long downButtonPressed = 0;
 volatile calibrate_modes calibrate_mode = cmNone;
 
-void handleReleaseUp() {
+void ICACHE_RAM_ATTR handleReleaseUp() {
     digitalRead(BLINDS_UP_PIN);
     attachInterrupt(digitalPinToInterrupt(BLINDS_UP_PIN), handlePushUp, FALLING);
     if (BlindStepper) {
@@ -488,8 +507,7 @@ void handleReleaseUp() {
 }
 
 
-void
-handleReleaseDown() {
+void ICACHE_RAM_ATTR handleReleaseDown() {
     digitalRead(BLINDS_DOWN_PIN);
     attachInterrupt(digitalPinToInterrupt(BLINDS_DOWN_PIN), handlePushDown, FALLING);
     if (BlindStepper) {
@@ -514,7 +532,7 @@ handleReleaseDown() {
     digitalWrite(LED_BUILTIN, HIGH);
 }
 
-void handlePushUp() {
+void ICACHE_RAM_ATTR handlePushUp() {
     digitalRead(BLINDS_UP_PIN);
     attachInterrupt(digitalPinToInterrupt(BLINDS_UP_PIN), handleReleaseUp, RISING);
     digitalWrite(LED_BUILTIN, LOW);
@@ -522,7 +540,7 @@ void handlePushUp() {
 }
 
 
-void handlePushDown() {
+void ICACHE_RAM_ATTR handlePushDown() {
     digitalRead(BLINDS_DOWN_PIN);
     attachInterrupt(digitalPinToInterrupt(BLINDS_DOWN_PIN), handleReleaseDown, RISING);
     digitalWrite(LED_BUILTIN, LOW);
